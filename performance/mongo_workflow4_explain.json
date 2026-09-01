@@ -1,0 +1,261 @@
+{
+  explainVersion: '1',
+  stages: [
+    {
+      '$cursor': {
+        queryPlanner: {
+          namespace: 'bitestream.reviews',
+          parsedQuery: {
+            restaurantId: {
+              '$eq': 'cd195e77-766e-4b07-a81e-2793228cc4bf'
+            }
+          },
+          indexFilterSet: false,
+          queryHash: '3561C081',
+          planCacheShapeHash: '3561C081',
+          planCacheKey: '32CDD798',
+          optimizationTimeMillis: 0,
+          cursorType: 'regular',
+          maxIndexedOrSolutionsReached: false,
+          maxIndexedAndSolutionsReached: false,
+          maxScansToExplodeReached: false,
+          prunedSimilarIndexes: false,
+          winningPlan: {
+            isCached: false,
+            stage: 'PROJECTION_COVERED',
+            transformBy: {
+              rating: 1,
+              _id: 0
+            },
+            inputStage: {
+              stage: 'IXSCAN',
+              nss: 'bitestream.reviews',
+              keyPattern: {
+                restaurantId: 1,
+                rating: 1
+              },
+              indexName: 'idx_reviews_restaurant_rating',
+              isMultiKey: false,
+              multiKeyPaths: {
+                restaurantId: [],
+                rating: []
+              },
+              isUnique: false,
+              isSparse: false,
+              isPartial: false,
+              indexVersion: 2,
+              direction: 'forward',
+              indexBounds: {
+                restaurantId: [
+                  '["cd195e77-766e-4b07-a81e-2793228cc4bf", "cd195e77-766e-4b07-a81e-2793228cc4bf"]'
+                ],
+                rating: [
+                  '[MinKey, MaxKey]'
+                ]
+              }
+            }
+          },
+          rejectedPlans: []
+        },
+        executionStats: {
+          executionSuccess: true,
+          nReturned: 2016,
+          executionTimeMillis: 2,
+          totalKeysExamined: 2016,
+          totalDocsExamined: 0,
+          executionStages: {
+            isCached: false,
+            stage: 'PROJECTION_COVERED',
+            nReturned: 2016,
+            executionTimeMillisEstimate: 0,
+            works: 2017,
+            advanced: 2016,
+            needTime: 0,
+            needYield: 0,
+            saveState: 8,
+            restoreState: 7,
+            isEOF: 1,
+            transformBy: {
+              rating: 1,
+              _id: 0
+            },
+            inputStage: {
+              stage: 'IXSCAN',
+              nReturned: 2016,
+              executionTimeMillisEstimate: 0,
+              works: 2017,
+              advanced: 2016,
+              needTime: 0,
+              needYield: 0,
+              saveState: 8,
+              restoreState: 7,
+              isEOF: 1,
+              nss: 'bitestream.reviews',
+              keyPattern: {
+                restaurantId: 1,
+                rating: 1
+              },
+              indexName: 'idx_reviews_restaurant_rating',
+              isMultiKey: false,
+              multiKeyPaths: {
+                restaurantId: [],
+                rating: []
+              },
+              isUnique: false,
+              isSparse: false,
+              isPartial: false,
+              indexVersion: 2,
+              direction: 'forward',
+              indexBounds: {
+                restaurantId: [
+                  '["cd195e77-766e-4b07-a81e-2793228cc4bf", "cd195e77-766e-4b07-a81e-2793228cc4bf"]'
+                ],
+                rating: [
+                  '[MinKey, MaxKey]'
+                ]
+              },
+              keysExamined: 2016,
+              seeks: 1,
+              dupsTested: 0,
+              dupsDropped: 0,
+              peakTrackedMemBytes: 0
+            }
+          }
+        }
+      },
+      nReturned: Long('2016'),
+      executionTimeMillisEstimate: Long('2')
+    },
+    {
+      '$facet': {
+        rating_distribution: [
+          {
+            '$internalFacetTeeConsumer': {},
+            nReturned: Long('2016'),
+            executionTimeMillisEstimate: Long('2')
+          },
+          {
+            '$group': {
+              _id: '$rating',
+              count: {
+                '$sum': {
+                  '$const': 1
+                }
+              },
+              '$willBeMerged': false
+            },
+            nReturned: Long('5'),
+            executionTimeMillisEstimate: Long('2'),
+            maxAccumulatorMemoryUsageBytes: {
+              count: Long('1000')
+            },
+            totalOutputDataSizeBytes: Long('1185'),
+            usedDisk: false,
+            spills: Long('0'),
+            spilledDataStorageSize: Long('0'),
+            spilledBytes: Long('0'),
+            spilledRecords: Long('0'),
+            peakTrackedMemBytes: Long('1080')
+          }
+        ],
+        summary: [
+          {
+            '$internalFacetTeeConsumer': {},
+            nReturned: Long('2016'),
+            executionTimeMillisEstimate: Long('0')
+          },
+          {
+            '$group': {
+              _id: {
+                '$const': null
+              },
+              total: {
+                '$sum': {
+                  '$const': 1
+                }
+              },
+              avg: {
+                '$avg': '$rating'
+              },
+              '$willBeMerged': false
+            },
+            nReturned: Long('1'),
+            executionTimeMillisEstimate: Long('0'),
+            maxAccumulatorMemoryUsageBytes: {
+              total: Long('200'),
+              avg: Long('168')
+            },
+            totalOutputDataSizeBytes: Long('269'),
+            usedDisk: false,
+            spills: Long('0'),
+            spilledDataStorageSize: Long('0'),
+            spilledBytes: Long('0'),
+            spilledRecords: Long('0'),
+            peakTrackedMemBytes: Long('384')
+          }
+        ]
+      },
+      nReturned: Long('1'),
+      executionTimeMillisEstimate: Long('2')
+    }
+  ],
+  queryShapeHash: '0CE9B6436C374D3A8B724EDCD81AEFC83E2B6A6CE5A0D31EE7A2E73874F0B7FE',
+  serverInfo: {
+    host: 'Bankapallis-MacBook-Air.local',
+    port: 27017,
+    version: '8.3.7',
+    gitVersion: '34eee04f34989abb7a3d91447976f033f4f74af2'
+  },
+  serverParameters: {
+    internalQueryFacetBufferSizeBytes: 104857600,
+    internalDocumentSourceGroupMaxMemoryBytes: 104857600,
+    internalQueryMaxBlockingSortMemoryUsageBytes: 104857600,
+    internalDocumentSourceSetWindowFieldsMaxMemoryBytes: 104857600,
+    internalQueryFacetMaxOutputDocSizeBytes: 104857600,
+    internalLookupStageIntermediateDocumentMaxSizeBytes: 104857600,
+    internalQueryProhibitBlockingMergeOnMongoS: 0,
+    internalQueryMaxAddToSetBytes: 104857600,
+    internalQueryFrameworkControl: 'trySbeRestricted',
+    internalQueryPlannerIgnoreIndexWithCollationForRegex: 1
+  },
+  command: {
+    aggregate: 'reviews',
+    pipeline: [
+      {
+        '$match': {
+          restaurantId: 'cd195e77-766e-4b07-a81e-2793228cc4bf'
+        }
+      },
+      {
+        '$facet': {
+          rating_distribution: [
+            {
+              '$group': {
+                _id: '$rating',
+                count: {
+                  '$sum': 1
+                }
+              }
+            }
+          ],
+          summary: [
+            {
+              '$group': {
+                _id: null,
+                total: {
+                  '$sum': 1
+                },
+                avg: {
+                  '$avg': '$rating'
+                }
+              }
+            }
+          ]
+        }
+      }
+    ],
+    cursor: {},
+    '$db': 'bitestream'
+  },
+  ok: 1
+}

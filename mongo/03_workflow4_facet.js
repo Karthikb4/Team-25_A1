@@ -1,16 +1,19 @@
 // Workflow 4: Multi-Faceted Review Analytics ($facet)
-const db = db.getSiblingDB("bitestream_db");
+const db = db.getSiblingDB("bitestream");
 
-// Analyze reviews for restaurant_id: 1 (or change as needed)
-const targetRestaurantId = 1;
+// Target a valid restaurantId from the database
+const sampleReview = db.reviews.findOne();
+const targetRestaurantId = sampleReview ? sampleReview.restaurantId : null;
+
+print(`Running Workflow 4 for restaurantId: ${targetRestaurantId}`);
 
 const pipeline = [
   {
-    $match: { restaurant_id: targetRestaurantId }
+    $match: { restaurantId: targetRestaurantId }
   },
   {
     $facet: {
-      // 1. Rating Distribution (1 to 5 stars)
+      // 1. Star Rating Distribution (1 to 5)
       rating_distribution: [
         {
           $group: {
@@ -30,14 +33,14 @@ const pipeline = [
         }
       ],
 
-      // 2. Most frequent tag strings via $unwind
+      // 2. Most Frequent Sentiment Tags
       most_frequent_tags: [
         {
-          $unwind: "$sentiment_tags"
+          $unwind: "$sentimentTags"
         },
         {
           $group: {
-            _id: "$sentiment_tags",
+            _id: "$sentimentTags",
             frequency: { $sum: 1 }
           }
         },
@@ -56,7 +59,7 @@ const pipeline = [
         }
       ],
 
-      // 3. Overall average rating
+      // 3. Overall Summary Metrics
       overall_summary: [
         {
           $group: {

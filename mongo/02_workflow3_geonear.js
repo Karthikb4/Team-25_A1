@@ -1,32 +1,33 @@
-// Workflow 3: Nearest Active Driver ($geoNear within 5km / 5000m)
-const db = db.getSiblingDB("bitestream_db");
+// Workflow 3: Nearest Active Driver ($geoNear within 5km)
+const db = db.getSiblingDB("bitestream");
 
-// Target coordinates (e.g. Restaurant at Longitude 78.3826, Latitude 17.4435)
-const targetLongitude = 78.3826;
-const targetLatitude = 17.4435;
-const maxDistanceInMeters = 5000; // 5km limit
+// Dynamically pick the coordinates of an active ping
+const sample = db.DriverPings.findOne({ active: true });
+const centerCoords = sample ? sample.location.coordinates : [80.175, 13.121];
+
+print(`Searching 5km radius around coordinates: [${centerCoords}] for active drivers...`);
 
 const pipeline = [
   {
     $geoNear: {
       near: {
         type: "Point",
-        coordinates: [targetLongitude, targetLatitude]
+        coordinates: centerCoords
       },
-      distanceField: "distance_meters",
-      maxDistance: maxDistanceInMeters,
-      query: { status: "ACTIVE" },
+      distanceField: "distanceMeters",
+      maxDistance: 5000,
+      query: { active: true },
       spherical: true
     }
   },
   {
     $project: {
       _id: 1,
-      driver_id: 1,
-      status: 1,
-      distance_meters: { $round: ["$distance_meters", 2] },
+      driverId: 1,
+      active: 1,
+      distanceMeters: { $round: ["$distanceMeters", 2] },
       coordinates: "$location.coordinates",
-      created_at: 1
+      createdAt: 1
     }
   },
   {
@@ -34,6 +35,6 @@ const pipeline = [
   }
 ];
 
-const results = db.driver_pings.aggregate(pipeline).toArray();
+const results = db.DriverPings.aggregate(pipeline).toArray();
 print("=== Workflow 3: Closest Active Drivers within 5km ===");
 printjson(results);

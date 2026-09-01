@@ -1,32 +1,36 @@
-const db = db.getSiblingDB("bitestream_db");
+const db = db.getSiblingDB("bitestream");
 
-// 1. Initialize Collections explicitly
-db.createCollection("menus");
-db.createCollection("reviews");
-db.createCollection("driver_pings");
+// 1. Drop existing non-_id indexes to prevent naming conflicts
+try {
+  db.DriverPings.dropIndexes();
+  db.reviews.dropIndexes();
+  print(">>> Cleared older indexes successfully.");
+} catch (e) {
+  print(">>> Index drop notice: " + e.message);
+}
 
-// 2. Geospatial 2dsphere index on location (Mandated by Project 1 spec)
-db.driver_pings.createIndex(
+// 2. DriverPings: 2dsphere index on location
+db.DriverPings.createIndex(
   { location: "2dsphere" },
   { name: "idx_driver_location_2dsphere" }
 );
 
-// 3. TTL Index on created_at: expireAfterSeconds: 7200 (2 hours) (Mandated by Project 1 spec)
-db.driver_pings.createIndex(
-  { created_at: 1 },
+// 3. DriverPings: TTL index on createdAt (2 hours / 7200s)
+db.DriverPings.createIndex(
+  { createdAt: 1 },
   { expireAfterSeconds: 7200, name: "idx_driver_ping_ttl_2h" }
 );
 
-// 4. Secondary compound index for active driver queries
-db.driver_pings.createIndex(
-  { status: 1, created_at: -1 },
-  { name: "idx_driver_status_created" }
+// 4. DriverPings: Compound index for active driver queries
+db.DriverPings.createIndex(
+  { active: 1, createdAt: -1 },
+  { name: "idx_driver_active_created" }
 );
 
-// 5. Index for Workflow 4 ($facet review analytics)
+// 5. reviews: Compound index on restaurantId and rating
 db.reviews.createIndex(
-  { restaurant_id: 1, rating: 1 },
+  { restaurantId: 1, rating: 1 },
   { name: "idx_reviews_restaurant_rating" }
 );
 
-print(">>> MongoDB collections and all required indexes created successfully.");
+print(">>> Indexes created successfully on database 'bitestream'!");
