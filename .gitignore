@@ -1,7 +1,5 @@
-./datageneration/seed_reference.json
-
-./mongo/explain.js
-
-./mongo/output.json
+data_generation/seed_reference.json
+mongo/explain.js
+mongo/output.json
 
 
