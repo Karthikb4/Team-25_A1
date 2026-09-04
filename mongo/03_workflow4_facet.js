@@ -47,6 +47,9 @@ const result = db.reviews.aggregate([
                     $sort: { count: -1 }
                 },
                 {
+                    $limit: 10
+                },
+                {
                     $project: {
                         _id: 0,
                         tag: "$_id",
