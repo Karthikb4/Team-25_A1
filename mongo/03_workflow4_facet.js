@@ -1,8 +1,8 @@
 use("bitestream");
 
-const restaurantId = "6ba0b353-f07c-486b-8c5d-72a49605cb11";
+const restaurantId = "346c9f49-ef62-42a6-a7d9-75d42837527d";
 
-const result = db.reviews.aggregate([
+const result = db.Reviews.aggregate([
     {
         $match: {
             restaurantId: restaurantId
