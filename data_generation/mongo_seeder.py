@@ -31,7 +31,7 @@ PINGS_COLLECTION = "DriverPings"
 # The TTL index field. Must match 01_collections_and_indexes.js exactly:
 #   db.DriverPings.createIndex({ created_at: 1 }, { expireAfterSeconds: 7200 })
 # A TTL index on created_at will never expire a document that stores
-# createdAt instead, and Mongo gives no warning about the mismatch.
+# created_at instead, and Mongo gives no warning about the mismatch.
 PING_TIME_FIELD = "created_at"
 
 NUM_REVIEWS = 100_000
@@ -200,7 +200,7 @@ def generate_reviews(reference_data):
                 f"Sample review with rating {rating}"
             ),
             "sentimentTags": tags_for_rating(rating),
-            "createdAt": (
+            "created_at": (
                 now
                 - timedelta(
                     days=rng.randint(0, 90),
