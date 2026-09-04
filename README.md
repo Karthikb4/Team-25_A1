@@ -141,6 +141,23 @@ error.
   `drivers` table is defined anywhere in `01_schema_ddl.sql`. MongoDB is
   currently the sole source of truth for driver identity. Confirm with team
   whether this is intentional or a gap.
+- **Workflows are called with manually-passed parameters, not through an
+  API**: this assignment is database-only (per the spec: "there is no
+  front end application code for this assignment"), so `sp_execute_checkout`,
+  `02_workflow3_geonear.js`, and `03_workflow4_facet.js` are all invoked
+  directly with hardcoded/manually-supplied parameters (a `restaurantId`,
+  a set of coordinates, etc.) rather than through a REST/GraphQL API layer.
+  We're assuming a real application would eventually call these same
+  pipelines through an API that passes those parameters dynamically — that
+  API is out of scope for this assignment and has not been built.
+- **Multi-faceted review analytics (Workflow 4) is scoped per-restaurant**:
+  `03_workflow4_facet.js` filters by a single `restaurantId` before running
+  the `$facet` aggregation (rating distribution, tag frequency, overall
+  average), rather than computing these facets globally across all
+  restaurants at once. This matches the assignment's framing of the
+  workflow as restaurant-level analytics and keeps the aggregation scoped
+  to a single index seek on `idx_reviews_restaurant_rating` (see the
+  Workflow 4 performance proof below) rather than a full-collection scan.
 
 ---
 
@@ -355,6 +372,8 @@ rejects — every document the index pointed to was relevant and returned.
 ## Repository
 
 - GitHub URL: https://github.com/Karthikb4/Team-25_A1
-- Final commit hash: [fill in at submission time — this must be the exact
-  commit hash of your last push, added right before you submit the zip to
-  Moodle]
+- Final commit hash: `b42ff80e4bc823c29511d180838f33b28244d60`
+
+  Note: this is the second-last hash, since the last hash would always be
+  the README commit itself, and we can't write into the README after
+  committing it :)
