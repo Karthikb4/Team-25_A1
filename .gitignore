@@ -1,0 +1,26 @@
+# Virtual environments
+venv/
+*/venv/
+env/
+*/env/
+.venv/
+*/.venv/
+
+# Python cache
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*$py.class
+
+# macOS files
+.DS_Store
+*/.DS_Store
+
+# Editor metadata
+.vscode/
+.idea/
+
+# Seed reference
+seed_reference.json
+**/seed_reference.json
+data_generation/seed_reference.json

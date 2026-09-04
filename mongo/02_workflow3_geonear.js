@@ -1,18 +1,31 @@
-// Workflow 3: Nearest Active Driver ($geoNear within 5km)
-const db = db.getSiblingDB("bitestream");
+// Workflow 3: Nearest Active Driver ($geoNear)
 
-// Dynamically pick the coordinates of an active ping
-const sample = db.DriverPings.findOne({ active: true });
-const centerCoords = sample ? sample.location.coordinates : [80.175, 13.121];
+var coords = null;
 
-print(`Searching 5km radius around coordinates: [${centerCoords}] for active drivers...`);
+if (typeof targetCoords !== 'undefined' && Array.isArray(targetCoords)) {
+  coords = targetCoords;
+} else {
+  // Sample an active driver location with a realistic offset
+  const sample = db.DriverPings.aggregate([
+    { $match: { active: true } },
+    { $sample: { size: 1 } }
+  ]).toArray();
+
+  if (sample.length > 0) {
+    const rawLon = sample[0].location.coordinates[0];
+    const rawLat = sample[0].location.coordinates[1];
+    coords = [rawLon + (Math.random() - 0.5) * 0.01, rawLat + (Math.random() - 0.5) * 0.01];
+  } else {
+    coords = [80.2450, 13.0400];
+  }
+}
 
 const pipeline = [
   {
     $geoNear: {
       near: {
         type: "Point",
-        coordinates: centerCoords
+        coordinates: coords
       },
       distanceField: "distanceMeters",
       maxDistance: 5000,
@@ -20,21 +33,21 @@ const pipeline = [
       spherical: true
     }
   },
+  { $limit: 1 },
   {
     $project: {
-      _id: 1,
+      _id: 0,
       driverId: 1,
       active: 1,
       distanceMeters: { $round: ["$distanceMeters", 2] },
       coordinates: "$location.coordinates",
       createdAt: 1
     }
-  },
-  {
-    $limit: 10
   }
 ];
 
 const results = db.DriverPings.aggregate(pipeline).toArray();
-print("=== Workflow 3: Closest Active Drivers within 5km ===");
-printjson(results);
+
+// Output strictly formatted JSON for evaluation scripts
+print(JSON.stringify(results, null, 2));
+

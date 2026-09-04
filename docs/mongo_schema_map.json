@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BiteStream MongoDB Document Schemas and Validation Models",
+  "version": "1.0.0",
+  "database": "bitestream",
+  "collections": {
+    "menus": {
+      "description": "Catalog containing multi-level nested categories, dishes, prices, and addon options per restaurant.",
+      "validationLevel": "moderate",
+      "validationAction": "error",
+      "validator": {
+        "$jsonSchema": {
+          "bsonType": "object",
+          "required": ["restaurantId", "categories", "updatedAt"],
+          "properties": {
+            "_id": { "bsonType": "objectId" },
+            "restaurantId": {
+              "bsonType": "string",
+              "description": "Foreign key reference to PostgreSQL restaurant UUID"
+            },
+            "restaurantName": { "bsonType": "string" },
+            "categories": {
+              "bsonType": "array",
+              "items": {
+                "bsonType": "object",
+                "required": ["categoryId", "name", "items"],
+                "properties": {
+                  "categoryId": { "bsonType": "string" },
+                  "name": { "bsonType": "string" },
+                  "items": {
+                    "bsonType": "array",
+                    "items": {
+                      "bsonType": "object",
+                      "required": ["itemId", "name", "price", "available"],
+                      "properties": {
+                        "itemId": { "bsonType": "string" },
+                        "name": { "bsonType": "string" },
+                        "description": { "bsonType": "string" },
+                        "price": { "bsonType": "double" },
+                        "available": { "bsonType": "bool" },
+                        "customizationAddons": { "bsonType": "array" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "updatedAt": { "bsonType": "date" }
+          }
+        }
+      },
+      "indexes": [
+        {
+          "name": "idx_menus_restaurant_unique",
+          "key": { "restaurantId": 1 },
+          "unique": true,
+          "purpose": "Enforces 1:1 restaurant-to-menu mapping and speeds up menu lookups"
+        }
+      ]
+    },
+    "reviews": {
+      "description": "Customer feedback, numeric ratings (1-5), and sentiment tags.",
+      "validationLevel": "moderate",
+      "validationAction": "error",
+      "validator": {
+        "$jsonSchema": {
+          "bsonType": "object",
+          "required": ["restaurantId", "orderId", "rating", "createdAt"],
+          "properties": {
+            "_id": { "bsonType": "objectId" },
+            "restaurantId": { "bsonType": "string" },
+            "userId": { "bsonType": "string" },
+            "orderId": { "bsonType": "string" },
+            "rating": {
+              "bsonType": "int",
+              "minimum": 1,
+              "maximum": 5,
+              "description": "Rating scale from 1 to 5 stars"
+            },
+            "reviewText": { "bsonType": "string" },
+            "sentimentTags": {
+              "bsonType": "array",
+              "items": { "bsonType": "string" }
+            },
+            "createdAt": { "bsonType": "date" }
+          }
+        }
+      },
+      "indexes": [
+        {
+          "name": "idx_reviews_restaurant_rating",
+          "key": { "restaurantId": 1, "rating": 1 },
+          "purpose": "Optimizes Workflow 4 faceted queries filtering by restaurant and grouping by rating"
+        },
+        {
+          "name": "idx_reviews_tags",
+          "key": { "sentimentTags": 1 },
+          "purpose": "Accelerates tag frequency aggregation across sentiment tags"
+        }
+      ]
+    },
+    "DriverPings": {
+      "description": "Real-time driver location telemetry with 2-hour TTL eviction.",
+      "validationLevel": "moderate",
+      "validationAction": "error",
+      "validator": {
+        "$jsonSchema": {
+          "bsonType": "object",
+          "required": ["driverId", "location", "active", "createdAt"],
+          "properties": {
+            "_id": { "bsonType": "objectId" },
+            "driverId": { "bsonType": "string" },
+            "location": {
+              "bsonType": "object",
+              "required": ["type", "coordinates"],
+              "properties": {
+                "type": { "enum": ["Point"] },
+                "coordinates": {
+                  "bsonType": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": { "bsonType": "double" },
+                  "description": "[longitude, latitude] in GeoJSON format"
+                }
+              }
+            },
+            "active": { "bsonType": "bool" },
+            "createdAt": { "bsonType": "date" }
+          }
+        }
+      },
+      "indexes": [
+        {
+          "name": "idx_driverpings_location_2dsphere",
+          "key": { "location": "2dsphere" },
+          "purpose": "Mandatory geospatial index required for spherical $geoNear searches"
+        },
+        {
+          "name": "idx_driver_ping_ttl_2h",
+          "key": { "createdAt": 1 },
+          "expireAfterSeconds": 7200,
+          "purpose": "Auto-evicts telemetry pings older than 2 hours"
+        },
+        {
+          "name": "idx_driver_active_created",
+          "key": { "active": 1, "createdAt": -1 },
+          "purpose": "Supports fast filtering of currently active driver records"
+        }
+      ]
+    }
+  }
+}
