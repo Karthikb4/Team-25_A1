@@ -115,3 +115,91 @@ WINDOW ANALYSIS
 "  Buffers: shared hit=4"
 "Planning Time: 0.653 ms"
 "Execution Time: 82.123 ms"
+
+EXECUTION PLAN ANALYSIS
+=======================
+
+#   Node / Operation                  Actual   Planned   Loops   Ratio       Analysis
+------------------------------------------------------------------------------------------------
+1   Sort                              920      100       1       9.20x       Actual ~9x higher
+2   Aggregate                         9,199    110,916   1       12.06x      Planned ~12x higher
+3   Seq Scan on orders                111,985  111,984   1       1.01x       Excellent estimate
+4   Merge Left Join                   9,384    277,290   1       29.55x      Major estimation error
+5   Aggregate                         1        1         1       1.00x       Accurate estimate
+6   CTE Scan                          9,199    110,916   1       12.06x      Significant error
+7   Aggregate                         1        1         1       1.00x       Accurate estimate
+8   CTE Scan                          9,199    110,916   1       12.06x      Significant error
+9   Sort                              9,384    100,000   1       10.66x      Planner overestimates
+10  Nested Loop Inner Join            9,384    100,000   1       10.66x      Join overestimated
+11  Function Scan                     92       1,000     1       10.87x      Function estimate poor
+12  Materialize                       102      100       92      1.02x       Good estimate
+14  Materialize                       9,199    110,916   1       12.06x      CTE error propagated
+15  Sort                              9,199    110,916   1       12.06x      Significant error
+16  CTE Scan                          9,199    110,916   1       12.06x      Significant error
+17  Merge Inner Join                  920      100       1       9.20x       Actual ~9x higher
+18  Window Aggregate                  8,465    277,290   1       32.76x      Major overestimation
+19  Window Aggregate                  8,466    277,290   1       32.76x      Major overestimation
+20  Window Aggregate                  8,467    277,290   1       32.75x      Major overestimation
+21  Sort                              8,468    277,290   1       32.75x      Major estimation error
+22  CTE Scan                          9,384    277,290   1       29.55x      Major estimation error
+23  Sort                              829      100       1       8.29x       Actual ~8x higher
+24  Hash Inner Join                   10       100       1       10.00x      Planner overestimates
+25  Window Aggregate                  10       277,290   1       27,729x     EXTREME error
+26  Sort                              11       277,290   1       25,208x     EXTREME error
+27  Aggregate                         102      277,290   1       2,718.53x   EXTREME error
+28  CTE Scan                          9,384    277,290   1       29.55x      Major estimation error
+29  Hash                              102      100       1       1.02x       Good estimate
+30  Seq Scan on restaurants           102      100       1       1.02x       Excellent estimate
+------------------------------------------------------------------------------------------------
+
+
+KEY FINDINGS
+============
+
+Category                  Nodes                         Observation
+---------------------------------------------------------------------------
+Excellent estimates       3, 5, 7, 12, 29, 30        Actual ≈ Planned
+Moderate errors            1, 9, 10, 11, 17, 23, 24   ~8–11x difference
+Major errors               2, 4, 6, 8, 14–16, 18–22   ~12–33x difference
+Extreme errors             25, 26, 27                  Up to 27,729x difference
+
+
+MOST IMPORTANT NODES
+====================
+
+Rank   Node                         Planned       Actual       Difference
+---------------------------------------------------------------------------
+1      25 - Window Aggregate       277,290       10           27,729x
+2      26 - Sort                   277,290       11           25,208x
+3      27 - Aggregate              277,290       102          2,718.53x
+4      18-20 - Window Aggregate    277,290       ~8,466       ~32.76x
+5      4 - Merge Left Join         277,290       9,384        29.55x
+
+
+OVERALL CONCLUSION
+==================
+
+The execution plan shows severe cardinality misestimation.
+
+The largest errors occur around:
+
+    CTE
+      |
+      v
+  Aggregate
+      |
+      v
+     Join
+      |
+      v
+    Sort
+      |
+      v
+Window Aggregate
+
+The worst case is Node 25, where PostgreSQL estimates 277,290 rows
+but only 10 rows are actually produced — a 27,729x difference.
+
+These estimation errors propagate through subsequent Sort, Aggregate,
+Join, and Window operations and may cause PostgreSQL to choose
+suboptimal execution strategies.
